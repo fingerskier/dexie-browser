@@ -4,18 +4,24 @@ import {KEY} from 'K'
 
 
 export default function Footer() {
-  const [dexieURL, setDexieURL] = useLocalStorage(KEY.DEXIE_URL, 'dexie-url')
+  const [dexieURL, setDexieURL] = useLocalStorage(KEY.DEXIE_URL)
   
   const [editDexieKey, setEditDexieKey] = useState(false)
   
   
   return <footer>
-    {editDexieKey?
+    <a href='#'>Home</a>
     
-      <input value={dexieURL} onChange={e => setDexieURL(e.target.value)} onBlur={() => setEditDexieKey(false)} />
+    {editDexieKey?
+      <input
+        value={dexieURL}
+        onChange={e => setDexieURL(e.target.value)} 
+        onBlur={() => setEditDexieKey(false)} 
+        placeholder='Dexie-Cloud database URL'
+      />
     :
       <h1 onClick={() => setEditDexieKey(true)}>
-        {dexieURL}
+        {dexieURL? dexieURL : 'Click here to enter your Dexie-Cloud database URL'}
       </h1>
     }
   </footer>
