@@ -1,37 +1,45 @@
 import {useEffect, useState} from 'react'
-import Tables from 'com/Tables'
+import Tables from 'com/Tables/Tables'
 import useLocalStorage from 'hook/useLocalStorage'
 import useSimpleRouter from 'hook/useSimpleRouter'
 import {KEY,SCREEN} from 'K'
-import {initialize} from 'DB'
+import DB from 'DB'
+import Generic from 'com/Tables/Generic'
+import Members from 'com/Tables/Members'
+import Roles from 'com/Tables/Roles'
+import Users from 'com/Tables/Users'
+import Realms from 'com/Tables/Realms'
 
 
 export default function Main() {
   const [appName] = useLocalStorage(KEY.APP_NAME)
   const [dexieUrl] = useLocalStorage(KEY.DEXIE_URL)
   
-  const {context} = useSimpleRouter()
-  
-  const [initialized, setInitialized] = useState(false)
+  const {context, Route} = useSimpleRouter()
   
   
   useEffect(() => {
-    if (appName && dexieUrl) {
-      initialize(dexieUrl,appName)
-      .then(res=>setInitialized(true))
-      .catch(err=>{
-        setInitialized(false)
-        console.error(err)
-      })
-    }
+    console.log('Main', appName, dexieUrl, DB)
   }, [appName, dexieUrl])
   
   
   return <main>
-    {initialized? <>
+    {/* {DB? <> */}
       Database is ready
       
-      {!context?.[0]?.length && <ul>
+      <Route path='tables' element={<Tables />} />
+      
+      <Route path='table' element={<Generic />}>
+        <Route path='members' element={<div>Members</div>} />
+        
+        <Route path='roles' element={<div>Roles</div>} />
+
+        <Route path='users' element={<div>Users</div>} />
+
+        <Route path='realms' element={<div>Realms</div>} />
+      </Route>
+      
+      {/* {!context?.[0]?.length && <ul>
         <li>
           <a href='#tables'>Tables</a>
         </li>
@@ -39,7 +47,7 @@ export default function Main() {
       
       {context[0]===SCREEN.TABLES && <Tables />}
     </> : <>
-      <button onClick={() => initialize(dexieUrl,appName)}>Initialize Database</button>
-    </> }
+      <button>Initialize Database</button>
+    </> } */}
   </main>
 }
