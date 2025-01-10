@@ -4,8 +4,15 @@ export const KEY = {
 }
 
 
+export const SCREEN = {
+  TABLES: 'tables',
+  RECORDS: 'records',
+}
+
+
 const K = {
   KEY,
+  SCREEN,
 }
 
 
