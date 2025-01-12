@@ -24,30 +24,21 @@ export default function Main() {
   
   
   return <main>
-    {/* {DB? <> */}
-      Database is ready
-      
-      <Route path='tables' element={<Tables />} />
-      
-      <Route path='table' element={<Generic />}>
-        <Route path='members' element={<div>Members</div>} />
-        
-        <Route path='roles' element={<div>Roles</div>} />
-
-        <Route path='users' element={<div>Users</div>} />
-
-        <Route path='realms' element={<div>Realms</div>} />
-      </Route>
-      
-      {/* {!context?.[0]?.length && <ul>
-        <li>
-          <a href='#tables'>Tables</a>
-        </li>
-      </ul>}
-      
-      {context[0]===SCREEN.TABLES && <Tables />}
-    </> : <>
-      <button>Initialize Database</button>
-    </> } */}
+    Database is ready
+    
+    <Route path='' element={<div>Home</div>} />
+    
+    <Route path='tables' element={<Tables />} />
+    
+    <Route path='table' element={<Generic />}>
+    </Route>
+    
+    <Route path='members' element={<Members />} />
+    
+    <Route path='roles' element={<Roles />} />
+    
+    <Route path='users' element={<Users />} />
+    
+    <Route path='realms' element={<Realms />} />
   </main>
 }

@@ -29,7 +29,20 @@ body {
 
 main {
   position: relative;
-  
   flex-grow: 1;
   overflow-y: auto;
+}
+
+
+nav {
+  position: relative;
+  padding: 0.2rem 0.4rem;
+  
+  background-color: hsl(199, 50%, 80%);
+  border-radius: 1rem;
+  box-shadow: 0 0.2rem 2rem hsl(199, 50%, 50%);
+  
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
 }

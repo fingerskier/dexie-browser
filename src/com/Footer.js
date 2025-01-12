@@ -10,7 +10,10 @@ export default function Footer() {
   
   
   return <footer>
-    <a href='#'>Home</a>
+    <nav>
+      <a href='#'>Home</a>
+      <a href='#tables'>Tables</a>
+    </nav>
     
     {editDexieKey?
       <input
@@ -20,9 +23,9 @@ export default function Footer() {
         placeholder='Dexie-Cloud database URL'
       />
     :
-      <h1 onClick={() => setEditDexieKey(true)}>
+      <h3 onClick={() => setEditDexieKey(true)}>
         {dexieURL? dexieURL : 'Click here to enter your Dexie-Cloud database URL'}
-      </h1>
+      </h3>
     }
   </footer>
 }
