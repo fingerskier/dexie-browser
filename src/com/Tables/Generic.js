@@ -12,7 +12,7 @@ export default function Generic() {
   
   return <div>
     {state?.name && <>
-      Table "{state.name}"
+      <h2> {state.name} </h2>
       
       <Contents tableName={state.name} />
     </>}
@@ -26,6 +26,25 @@ function Contents({tableName}) {
   })
   
   const [fields, setFields] = useState([])
+  
+  
+  const addRecord = async() => {
+    const result = await DB.table(tableName).add({
+      name: 'New Record'
+    })
+  }
+  
+  
+  const editRecord = async(dat)=>{
+    let id = dat.id
+    
+    if (
+      (tableName === 'realms')
+      || (tableName === 'roles')
+    ) id = dat.realmId
+    
+    window.location = `?table=${tableName}&id=${id}&name=${dat.name}#record`
+  }
   
   
   useEffect(() => {
@@ -57,7 +76,7 @@ function Contents({tableName}) {
       
       <tbody>
         {data.map((row,I) => 
-          <tr key={I}>
+          <tr key={I} onClick={()=>editRecord(row)}>
             {fields.map((field,J) =><td key={J}>
               {(typeof row[field] === 'object')? 
                 JSON.stringify(row[field]) 
@@ -70,11 +89,6 @@ function Contents({tableName}) {
       </tbody>
     </table>}
     
-    
+    <button onClick={addRecord}>Add Record</button>
   </div>
-}
-
-
-function Editor({fields}) {
-
 }

@@ -69,7 +69,7 @@ export default function useSimpleRouter() {
   useEffect(() => {
     // Initialize route on mount
     handleHashChange()
-
+    
     // Add hash change listener
     window.addEventListener('hashchange', handleHashChange)
     window.addEventListener('popstate', handleHashChange)
@@ -80,9 +80,9 @@ export default function useSimpleRouter() {
       window.removeEventListener('popstate', handleHashChange)
     }
   }, [handleHashChange])
+  
+  
   /**
-  
-  
    * Route component for conditional rendering based on URL path
    * @param {Object} props - Component props
    * @param {number} [props.depth=0] - Depth level in route hierarchy

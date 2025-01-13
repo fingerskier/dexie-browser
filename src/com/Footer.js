@@ -11,7 +11,7 @@ export default function Footer() {
   
   return <footer>
     <nav>
-      <a href='#'>Home</a>
+      <a href='#main'>Home</a>
       <a href='#tables'>Tables</a>
     </nav>
     

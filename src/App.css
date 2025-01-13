@@ -46,3 +46,45 @@ nav {
   justify-content: space-evenly;
   align-items: center;
 }
+
+
+/* zebra-stripe all table rows */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table th, table td {
+  padding: 0.2rem 0.4rem;
+}
+
+table th {
+  background-color: hsl(199, 50%, 80%);
+}
+
+table tr:nth-child(odd) {
+  background-color: hsl(199, 50%, 90%);
+}
+
+/* highlight hovered table rows */
+table tr:hover {
+  background-color: hsl(199, 50%, 70%);
+  /* change cursor as well */
+  cursor: pointer;
+}
+
+
+label {
+  display: inline-block;
+  min-width: 7rem;
+  text-align: right;
+  padding: 0.5rem 1rem;
+}
+
+
+.record.edit {
+  position: relative;
+  border: thin solid hsl(199, 50%, 50%);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
