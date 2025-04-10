@@ -3,6 +3,15 @@ import dexieCloud from "dexie-cloud-addon"
 import { KEY } from 'K'
 
 
+export const schema = {
+  realms: '@realmId',
+  members: '@id,[realmId+email],userId',
+  roles: '[realmId+name]',
+  users: '@id,name,email,phone',
+  data: '@id,realmId,type,timestamp',
+}
+
+
 class AppDatabase extends Dexie {
   realms
   members
@@ -14,14 +23,7 @@ class AppDatabase extends Dexie {
     const appName = JSON.parse(localStorage.getItem(KEY.APP_NAME))
     super(appName, { addons: [dexieCloud] })
     
-    const defaultSchema = {
-      realms: '@realmId',
-      members: '@id,[realmId+email],userId',
-      roles: '[realmId+name]',
-      users: '@id,name,email,phone',
-    }
-    
-    this.version(1).stores(defaultSchema)
+    this.version(1).stores(schema)
     
     // Initialize table properties
     this.realms = this.table('realms')
@@ -36,7 +38,7 @@ class AppDatabase extends Dexie {
     console.log('Initialized database:', {
       url: dexieUrl,
       appName: appName,
-      schema: defaultSchema
+      schema,
     })
   }
   

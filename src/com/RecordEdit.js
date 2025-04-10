@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react'
-import DB from 'DB'
+import DB, {schema} from 'DB'
 import { useLiveQuery } from 'dexie-react-hooks'
 import useSimpleRouter from 'hook/useSimpleRouter'
 
@@ -38,7 +38,9 @@ function Edit({tableName, name, id}) {
     }
   })
   
-  const [fields, setFields] = useState([])
+  const [fields, setFields] = useState(
+    schema[tableName].split(',').filter(f=>!f.includes('[')).map(f=>f.replace('@',''))
+  )
   const [showRaw, setShowRaw] = useState(false)
   
   
@@ -59,15 +61,17 @@ function Edit({tableName, name, id}) {
   
   useEffect(() => {
     if (data) {
-      const newFields = []
+      const newFields = new Set(
+        schema[tableName].split(',').filter(f=>!f.includes('[')).map(f=>f.replace('@',''))
+      )
       
-      Object.entries(data).forEach(([key, value]) => {
-        if (!newFields.includes(key)) {
-          newFields.push(key)
-        }
+      data?.forEach(row => {
+        Object.keys(row).forEach(key => {
+          newFields.add(key)
+        })
       })
       
-      setFields(newFields)
+      setFields([...newFields])
     }
   }, [data])
   
@@ -84,7 +88,15 @@ function Edit({tableName, name, id}) {
           && !field.toLowerCase().includes('accepted')
         )
         
-        const val = (typeof data[field] === 'object')? 
+        let type = 'text'
+        if (field === 'timestamp') type = 'datetime-local'
+        if (field === 'owner') type = 'email'
+        if (field === 'phone') type = 'tel'
+        
+        let val
+        
+        if (field && data?.[field])
+          val = (typeof data[field] === 'object')? 
           JSON.stringify(data[field], null, 2): data[field]
         
         return <div key={I}>

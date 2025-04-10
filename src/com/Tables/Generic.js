@@ -1,12 +1,10 @@
 import {useEffect, useState} from 'react'
 import useSimpleRouter from 'hook/useSimpleRouter'
-import DB from 'DB'
+import DB, {schema} from 'DB'
 import { useLiveQuery } from 'dexie-react-hooks'
 
 
 export default function Generic() {
-  const {useLiveQuery} = useSimpleRouter()
-  
   const {state} = useSimpleRouter()
   
   
@@ -25,7 +23,9 @@ function Contents({tableName}) {
     return await DB.table(tableName).toArray()
   })
   
-  const [fields, setFields] = useState([])
+  const [fields, setFields] = useState(
+    schema[tableName].split(',').filter(f=>!f.includes('[')).map(f=>f.replace('@',''))
+  )
   
   
   const addRecord = async() => {
@@ -49,17 +49,17 @@ function Contents({tableName}) {
   
   useEffect(() => {
     if (data) {
-      const newFields = []
+      const newFields = new Set(
+        schema[tableName].split(',').filter(f=>!f.includes('[')).map(f=>f.replace('@',''))
+      )
       
       data?.forEach(row => {
         Object.keys(row).forEach(key => {
-          if (!newFields.includes(key)) {
-            newFields.push(key)
-          }
+          newFields.add(key)
         })
       })
       
-      setFields(newFields)
+      setFields([...newFields])
     }
   }, [data])
   
