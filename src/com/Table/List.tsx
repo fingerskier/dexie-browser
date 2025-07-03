@@ -9,7 +9,7 @@ export default function TableList() {
     <ul>
       {tables.map((t, i) => (
         <li key={i}>
-          <StateLink to="table" data={{ id: t.name }}>{t.name}</StateLink>
+          <StateLink to="data" data={{ id: t.name }}>{t.name}</StateLink>
         </li>
       ))}
     </ul>
