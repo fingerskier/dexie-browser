@@ -36,10 +36,11 @@ export const db = new AppDB()
 
 export async function initDb () {
   // Dexie Cloud wants DexieCloudOptions, not just a bare string
+  const config = dexieConfig as { databaseUrl?: string; dbUrl?: string }
   const opts: DexieCloudOptions = {
     ...dexieConfig,
     // map legacy "dbUrl" -> "databaseUrl" if necessary
-    databaseUrl: (dexieConfig as any).databaseUrl ?? (dexieConfig as any).dbUrl
+    databaseUrl: config.databaseUrl ?? config.dbUrl
   }
 
   if (!opts.databaseUrl) {

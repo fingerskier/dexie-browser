@@ -12,10 +12,10 @@ export default function RecordList() {
 
   const addRecord = async () => {
     if (!table) return
-    const json = prompt('Enter JSON for new item:')
-    if (!json) return
+    const name = prompt('Name for new item?')
+    if (!name) return
     try {
-      await table.add(JSON.parse(json) as unknown)
+      await table.add({ name } as unknown)
     } catch (err) {
       alert('Failed to add item: ' + err)
     }
