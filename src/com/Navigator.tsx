@@ -5,6 +5,5 @@ export default function Navigator() {
   return <div>
     <StateButton to="tables" />
     <StateButton to="users" />
-    <StateButton to="data" />
   </div>
 }

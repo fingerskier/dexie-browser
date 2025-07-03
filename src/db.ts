@@ -1,70 +1,64 @@
 import Dexie from 'dexie'
 import type { Table } from 'dexie'
-import dexieCloud from 'dexie-cloud-addon'
+import dexieCloud, { DexieCloudOptions } from 'dexie-cloud-addon'
+import dexieConfig from '../dexie-cloud.json' assert { type: 'json' }
 
 const schema = {
   version: 2,
   stores: {
-    dataItems: "&uuid, userId, timestamp, name, value, [userId+timestamp]"
+    // compound index: unique uuid, plus quick per‑user chronological queries
+    dataItems: '&uuid, userId, timestamp, name, value, [userId+timestamp]'
   }
 }
 
-
-export interface User {
-  id?: number
-  name: string
-  email: string
-}
-
-
 export interface DataItem {
   uuid: string
-  userId: number
+  userId: string // Dexie Cloud subject id is string, not number
   timestamp: number
   name: string
   value: string
 }
 
-
 class AppDB extends Dexie {
-  users!: Table<User, number>
   dataItems!: Table<DataItem, string>
 
-  constructor() {
+  constructor () {
     super('dexie-browser', {
       addons: [dexieCloud],
-      autoOpen: false,
+      autoOpen: false
     })
+
     this.version(schema.version).stores(schema.stores)
   }
 }
 
-
 export const db = new AppDB()
 
-let initPromise: Promise<void> | null = null
-
-export async function initDb() {
-  if (!initPromise) {
-    initPromise = fetch('/dexie-cloud.json')
-      .then(r => r.json())
-      .then(async opts => {
-        db.cloud.configure(opts)
-        await db.open()
-      })
+export async function initDb () {
+  // Dexie Cloud wants DexieCloudOptions, not just a bare string
+  const opts: DexieCloudOptions = {
+    ...dexieConfig,
+    // map legacy "dbUrl" -> "databaseUrl" if necessary
+    databaseUrl: (dexieConfig as any).databaseUrl ?? (dexieConfig as any).dbUrl
   }
-  return initPromise
+
+  if (!opts.databaseUrl) {
+    throw new Error('dexie-cloud.json must include "databaseUrl"')
+  }
+
+  db.cloud.configure(opts)
+  await db.open()
 }
 
 declare global {
-  interface Window {
-    db: AppDB
-  }
+  interface Window { db: AppDB }
 }
 
-window.db = db // Expose db for debugging in browser console
+if (typeof window !== 'undefined') {
+  window.db = db // for devtools
+}
 
-export async function login(hints?: { email?: string }) {
+export async function login (hints?: { email?: string }) {
   await initDb()
   await db.cloud.login(hints)
 }
