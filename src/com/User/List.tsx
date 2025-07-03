@@ -3,17 +3,17 @@ import { StateLink } from 'ygdrassil'
 import { db } from '../../db'
 
 export default function UserList() {
-  const users = useLiveQuery(() => db.users.toArray(), [])
+  const users = useLiveQuery(() => db.members.toArray(), [])
 
   const addUser = async () => {
     const name = prompt('Name?')
     if (!name) return
     const email = prompt('Email?') || ''
-    await db.users.add({ name, email })
+    await db.members.add({ name, email })
   }
 
-  const remove = async (id: number) => {
-    if (confirm('Delete user?')) await db.users.delete(id)
+  const remove = async (id: string) => {
+    if (confirm('Delete user?')) await db.members.delete(id)
   }
 
   return <div>
