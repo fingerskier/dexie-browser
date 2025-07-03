@@ -41,6 +41,6 @@ class AppDB extends Dexie {
 
 export const db = new AppDB()
 
-export async function login() {
-  await db.cloud.login()
+export async function login(hints?: { email?: string }) {
+  await db.cloud.login(hints)
 }
