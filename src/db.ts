@@ -1,5 +1,6 @@
 import Dexie from 'dexie'
 import type { Table } from 'dexie'
+import dexieCloud from 'dexie-cloud-addon'
 
 const schema = {
   version: 1,
@@ -30,9 +31,16 @@ class AppDB extends Dexie {
   dataItems!: Table<DataItem, string>
 
   constructor() {
-    super('dexie-browser')
-    this.version(1).stores(schema.stores)
+    super('dexie-browser', {
+      addons: [dexieCloud],
+      autoOpen: true,
+    })
+    this.version(schema.version).stores(schema.stores)
   }
 }
 
 export const db = new AppDB()
+
+export async function login() {
+  await db.cloud.login()
+}
