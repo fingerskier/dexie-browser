@@ -15,7 +15,13 @@ export default function RecordList() {
     const name = prompt('Name for new item?')
     if (!name) return
     try {
-      await table.add({ name } as unknown)
+      await table.add({
+        // Dexie Cloud tables require a string primary key
+        uuid: crypto.randomUUID(),
+        timestamp: Date.now(),
+        name,
+        value: ''
+      } as unknown)
     } catch (err) {
       alert('Failed to add item: ' + err)
     }
