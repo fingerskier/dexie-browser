@@ -1,4 +1,3 @@
-import React from 'react'
 import {StateMachine, State} from 'ygdrassil'
 import Record from './Record'
 import Navigator from './Navigator'
