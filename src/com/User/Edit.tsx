@@ -4,21 +4,21 @@ import { db } from '../../db'
 
 export default function UserEdit() {
   const { query, gotoState } = useStateMachine()
-  const id = Number(query.id)
-  const user = useLiveQuery(() => db.users.get(id), [id])
+  const id = String(query.id)
+  const user = useLiveQuery(() => db.members.get(id), [id])
 
   const save = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const name = String(formData.get('name') || '')
     const email = String(formData.get('email') || '')
-    await db.users.put({ id, name, email })
+    await db.members.put({ id, name, email })
     gotoState('users')
   }
 
   const remove = async () => {
     if (confirm('Delete user?')) {
-      await db.users.delete(id)
+      await db.members.delete(id)
       gotoState('users')
     }
   }

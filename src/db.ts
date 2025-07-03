@@ -10,13 +10,6 @@ const schema = {
 }
 
 
-export interface User {
-  id?: number
-  name: string
-  email: string
-}
-
-
 export interface DataItem {
   uuid: string
   userId: number
@@ -27,7 +20,6 @@ export interface DataItem {
 
 
 class AppDB extends Dexie {
-  users!: Table<User, number>
   dataItems!: Table<DataItem, string>
 
   constructor() {
