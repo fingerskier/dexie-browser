@@ -39,7 +39,10 @@ class AppDB extends Dexie {
   }
 }
 
+
 export const db = new AppDB()
+
+window.db = db // Expose db for debugging in browser console
 
 export async function login(hints?: { email?: string }) {
   await db.cloud.login(hints)
