@@ -2,14 +2,7 @@ import Dexie from 'dexie'
 import type { Table } from 'dexie'
 import dexieCloud from 'dexie-cloud-addon'
 import type { DexieCloudOptions } from 'dexie-cloud-addon'
-
-const schema = {
-  version: 2,
-  stores: {
-    // compound index: unique uuid, plus quick per‑user chronological queries
-    dataItems: '&uuid, userId, timestamp, name, value, [userId+timestamp]'
-  }
-}
+import { schema } from './schema'
 
 export interface DataItem {
   uuid: string
