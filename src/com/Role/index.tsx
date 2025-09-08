@@ -1,9 +1,7 @@
 import Edit from './Edit'
 import List from './List'
-import Viewer from './Viewer'
 
 export default {
   Edit,
   List,
-  Viewer,
 }
