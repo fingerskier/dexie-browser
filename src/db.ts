@@ -1,7 +1,7 @@
 import Dexie from 'dexie'
 import type { Table } from 'dexie'
-import dexieCloud, { DexieCloudOptions } from 'dexie-cloud-addon'
-import dexieConfig from '../dexie-cloud.json' assert { type: 'json' }
+import dexieCloud from 'dexie-cloud-addon'
+import type { DexieCloudOptions } from 'dexie-cloud-addon'
 
 const schema = {
   version: 2,
@@ -34,17 +34,11 @@ class AppDB extends Dexie {
 
 export const db = new AppDB()
 
-export async function initDb () {
-  // Dexie Cloud wants DexieCloudOptions, not just a bare string
-  const config = dexieConfig as { databaseUrl?: string; dbUrl?: string }
-  const opts: DexieCloudOptions = {
-    ...dexieConfig,
-    // map legacy "dbUrl" -> "databaseUrl" if necessary
-    databaseUrl: config.databaseUrl ?? config.dbUrl
-  }
+export async function initDb (opts: DexieCloudOptions) {
+  if (db.isOpen()) return
 
   if (!opts.databaseUrl) {
-    throw new Error('dexie-cloud.json must include "databaseUrl"')
+    throw new Error('databaseUrl is required')
   }
 
   db.cloud.configure(opts)
@@ -60,6 +54,8 @@ if (typeof window !== 'undefined') {
 }
 
 export async function login (hints?: { email?: string }) {
-  await initDb()
+  if (!db.isOpen()) {
+    throw new Error('Database not initialized')
+  }
   await db.cloud.login(hints)
 }
