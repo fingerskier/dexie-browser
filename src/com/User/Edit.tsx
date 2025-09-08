@@ -12,7 +12,8 @@ export default function UserEdit() {
     const formData = new FormData(e.currentTarget)
     const name = String(formData.get('name') || '')
     const email = String(formData.get('email') || '')
-    await db.members.put({ id, name, email })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await db.members.put({ id, name, email } as any)
     gotoState('users')
   }
 
