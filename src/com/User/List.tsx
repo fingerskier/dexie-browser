@@ -9,7 +9,8 @@ export default function UserList() {
     const name = prompt('Name?')
     if (!name) return
     const email = prompt('Email?') || ''
-    await db.members.add({ name, email })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await db.members.add({ name, email } as any)
   }
 
   const remove = async (id: string) => {
