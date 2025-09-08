@@ -1,6 +1,6 @@
 import Main from './com/Main'
-import LoginWidget from './com/LoginWidget'
 import ConnectionManager from './com/ConnectionManager'
+import StatusBar from './com/StatusBar'
 
 import './App.css'
 
@@ -12,9 +12,8 @@ export default function App() {
     <ConnectionManager>
       <Main />
       <footer>
-        <LoginWidget />
-        <p>Powered by Vite + React</p>
+        <StatusBar />
       </footer>
-    </ConnectionManager>
+      </ConnectionManager>
   </>
 }
