@@ -5,6 +5,7 @@ import User from './User'
 import Table from './Table'
 import Role from './Role'
 import Realm from './Realm'
+import Settings from './Settings'
 
 export default function Main() {
   return <main>
@@ -40,6 +41,9 @@ export default function Main() {
       </State>
       <State name="realm">
         <Realm.Edit />
+      </State>
+      <State name="settings">
+        <Settings />
       </State>
     </StateMachine>
   </main>

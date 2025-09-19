@@ -5,11 +5,19 @@ import { loadSchema } from './schema'
 
 export let db: Dexie
 
-export async function initDb (opts: DexieCloudOptions) {
-  if (db?.isOpen()) return
-
+export async function initDb (opts: DexieCloudOptions, options: { force?: boolean } = {}) {
   if (!opts.databaseUrl) {
     throw new Error('databaseUrl is required')
+  }
+
+  if (db?.isOpen()) {
+    const currentUrl = db.cloud?.options?.databaseUrl
+    if (!options.force && currentUrl === opts.databaseUrl) {
+      return
+    }
+    db.close()
+  } else if (db) {
+    db.close()
   }
 
   const stores = await loadSchema()
