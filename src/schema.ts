@@ -1,9 +1,27 @@
+import {
+  credentialsAreComplete,
+  fetchDexieCloudSchema,
+  loadStoredCredentials
+} from './lib/dexieCloudApi'
+
 export type Schema = Record<string, string>
 
 let cached: Schema | undefined
 
 export async function loadSchema (): Promise<Schema> {
   if (cached) return cached
+
+  const credentials = loadStoredCredentials()
+  if (credentialsAreComplete(credentials)) {
+    try {
+      const schema = await fetchDexieCloudSchema(credentials)
+      cached = schema
+      return cached
+    } catch (err) {
+      console.warn('Failed to load schema from Dexie Cloud export', err)
+    }
+  }
+
   try {
     const resp = await fetch('/export.json')
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`)

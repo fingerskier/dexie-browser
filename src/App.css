@@ -55,3 +55,104 @@
   display: flex;
   gap: 0.5rem;
 }
+
+.settings {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-description {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settings-form fieldset {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-form legend {
+  font-weight: 600;
+  padding: 0 0.5rem;
+}
+
+.settings-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.settings-form label span {
+  font-weight: 500;
+}
+
+.settings-form input,
+.settings-form select {
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: inherit;
+}
+
+.settings-form input:focus,
+.settings-form select:focus {
+  outline: 2px solid #646cff;
+  outline-offset: 2px;
+}
+
+.settings-form .checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-form .checkbox input[type='checkbox'] {
+  width: auto;
+  accent-color: #646cff;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.settings-status {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+@media (prefers-color-scheme: light) {
+  .settings-description {
+    color: rgba(0, 0, 0, 0.65);
+  }
+
+  .settings-form fieldset {
+    border-color: rgba(0, 0, 0, 0.12);
+  }
+
+  .settings-form input,
+  .settings-form select {
+    border-color: rgba(0, 0, 0, 0.16);
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+}

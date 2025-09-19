@@ -6,5 +6,6 @@ export default function Navigator() {
     <StateButton to="users" />
     <StateButton to="realms" />
     <StateButton to="roles" />
+    <StateButton to="settings">Settings</StateButton>
   </div>
 }
