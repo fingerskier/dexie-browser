@@ -1,7 +1,22 @@
-export const schema = {
-  version: 2,
-  stores: {
-    // compound index: unique uuid, plus quick per-user chronological queries
-    dataItems: '&uuid, userId, timestamp, name, value, [userId+timestamp]'
+export type Schema = Record<string, string>
+
+let cached: Schema | undefined
+
+export async function loadSchema (): Promise<Schema> {
+  if (cached) return cached
+  try {
+    const resp = await fetch('/export.json')
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+    const json = await resp.json()
+    cached = json.schema ?? {}
+  } catch (err) {
+    console.warn('Failed to load schema from export.json', err)
+    cached = {}
   }
+  return cached as Schema
+}
+
+export function primaryKeyField (spec: string): string {
+  const pk = spec.split(',')[0].trim()
+  return pk.replace(/^(&|\++|\*)/, '').replace(/\[.*\]/, '').split('+')[0]
 }
