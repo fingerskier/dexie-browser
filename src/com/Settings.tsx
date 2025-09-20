@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import useLocalStorage from '../hook/useLocalStorage'
 import { initDb } from '../db'
@@ -12,10 +12,14 @@ import type { DexieCloudCredentials } from '../lib/dexieCloudApi'
 import {
   KNOWN_DATABASES_STORAGE_KEY,
   SELECTED_KNOWN_DATABASE_ID_STORAGE_KEY,
+  SELECTED_KNOWN_DATABASE_QUERY_KEY,
   createKnownDatabase,
   normalizeKnownDatabases,
+  readSelectedKnownDatabaseIdFromQuery,
+  readSelectedKnownDatabaseIdFromUrl,
   type KnownDatabase
 } from '../lib/knownDatabases'
+import { StateMachineContext } from 'ygdrassil'
 
 const DEFAULT_DATABASE_NAME = 'New database'
 
@@ -68,6 +72,8 @@ function getDatabaseLabel (database: KnownDatabase): string {
 }
 
 export default function Settings () {
+  const stateMachine = useContext(StateMachineContext)
+  const machineQuery = stateMachine?.query
   const [credentials, setCredentials] = useLocalStorage<DexieCloudCredentials>(
     DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY,
     { ...DEFAULT_CREDENTIALS }
@@ -89,6 +95,26 @@ export default function Settings () {
       : knownDatabases[0])
     : null
   const migrationDoneRef = useRef(false)
+
+  useEffect(() => {
+    if (!hasKnownDatabases) return
+
+    const candidate = stateMachine
+      ? readSelectedKnownDatabaseIdFromQuery(machineQuery)
+      : readSelectedKnownDatabaseIdFromUrl()
+    if (!candidate) return
+
+    if (!knownDatabases.some(database => database.id === candidate)) return
+    if (selectedDatabaseId === candidate) return
+    setSelectedDatabaseId(candidate)
+  }, [
+    hasKnownDatabases,
+    knownDatabases,
+    selectedDatabaseId,
+    setSelectedDatabaseId,
+    machineQuery,
+    stateMachine
+  ])
 
   useEffect(() => {
     setKnownDatabases(current => normalizeKnownDatabases(current))
@@ -144,6 +170,16 @@ export default function Settings () {
       setCredentials(activeDatabase.credentials)
     }
   }, [credentials, knownDatabases, selectedDatabaseId, setCredentials, setSelectedDatabaseId])
+
+  useEffect(() => {
+    if (!stateMachine) return
+    const currentQueryId = readSelectedKnownDatabaseIdFromQuery(machineQuery)
+    const activeId = selectedDatabase?.id ?? null
+    if (currentQueryId === activeId) return
+    stateMachine.setQuery({
+      [SELECTED_KNOWN_DATABASE_QUERY_KEY]: activeId
+    })
+  }, [machineQuery, selectedDatabase?.id, stateMachine])
 
   const updateCredentials = (patch: Partial<DexieCloudCredentials>) => {
     setCredentials(prev => {

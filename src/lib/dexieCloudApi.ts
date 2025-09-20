@@ -1,41 +1,17 @@
 import type { DexieCloudOptions } from 'dexie-cloud-addon'
 import type { TokenFinalResponse } from 'dexie-cloud-common'
-
-export interface DexieCloudCredentials {
-  databaseUrl: string
-  apiKey?: string
-  accessToken?: string
-  clientId?: string
-  clientSecret?: string
-  tokenUrl?: string
-  audience?: string
-  requireAuth?: boolean
-  defaultEmail?: string
-  tryUseServiceWorker?: boolean
-  disableWebSocket?: boolean
-  disableEagerSync?: boolean
-  periodicSyncIntervalMinutes?: number
-  exportPath?: string
-}
-
-export const DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY = 'dexie-browser/dexie-cloud-credentials'
-
-export const DEFAULT_CREDENTIALS: DexieCloudCredentials = {
-  databaseUrl: '',
-  apiKey: '',
-  accessToken: '',
-  clientId: '',
-  clientSecret: '',
-  tokenUrl: '',
-  audience: '',
-  requireAuth: false,
-  defaultEmail: '',
-  tryUseServiceWorker: true,
-  disableWebSocket: false,
-  disableEagerSync: false,
-  periodicSyncIntervalMinutes: undefined,
-  exportPath: ''
-}
+import {
+  DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY,
+  mergeWithDefaultCredentials,
+  type DexieCloudCredentials
+} from './dexieCloudCredentials'
+import {
+  SELECTED_KNOWN_DATABASE_ID_STORAGE_KEY,
+  loadKnownDatabasesFromStorage,
+  loadStoredSelectedKnownDatabaseId,
+  readSelectedKnownDatabaseIdFromUrl,
+  resolveActiveKnownDatabase
+} from './knownDatabases'
 
 export type DexieCloudSchemaDefinition = Record<string, string>
 
@@ -45,25 +21,46 @@ export interface DexieCloudRequestOptions extends Omit<RequestInit, 'body'> {
   parseJson?: boolean
 }
 
-export function mergeWithDefaultCredentials (
-  value?: Partial<DexieCloudCredentials> | null
-): DexieCloudCredentials {
-  return {
-    ...DEFAULT_CREDENTIALS,
-    ...value
-  }
-}
-
 export function loadStoredCredentials (): DexieCloudCredentials | null {
   if (typeof window === 'undefined') return null
+
+  const knownDatabases = loadKnownDatabasesFromStorage()
+  const preferredIdFromUrl = readSelectedKnownDatabaseIdFromUrl()
+  const storedSelectedId = loadStoredSelectedKnownDatabaseId()
+  const activeDatabase = resolveActiveKnownDatabase(
+    knownDatabases,
+    preferredIdFromUrl ?? storedSelectedId ?? undefined
+  )
+
+  if (activeDatabase) {
+    const normalized = mergeWithDefaultCredentials(activeDatabase.credentials)
+    persistJsonValue(SELECTED_KNOWN_DATABASE_ID_STORAGE_KEY, activeDatabase.id)
+    persistJsonValue(DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY, normalized)
+    return normalized
+  }
+
   const raw = window.localStorage.getItem(DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY)
   if (!raw) return null
   try {
     const parsed = JSON.parse(raw) as Partial<DexieCloudCredentials>
-    return mergeWithDefaultCredentials(parsed)
+    const normalized = mergeWithDefaultCredentials(parsed)
+    persistJsonValue(DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY, normalized)
+    return normalized
   } catch (err) {
     console.warn('Failed to parse stored Dexie Cloud credentials', err)
     return null
+  }
+}
+
+function persistJsonValue (key: string, value: unknown) {
+  try {
+    const serialized = JSON.stringify(value)
+    if (window.localStorage.getItem(key) === serialized) {
+      return
+    }
+    window.localStorage.setItem(key, serialized)
+  } catch (err) {
+    console.warn(`Failed to persist ${key} to localStorage`, err)
   }
 }
 
@@ -223,6 +220,13 @@ export async function dexieCloudRequest<T> (
     )
   }
 }
+
+export type { DexieCloudCredentials } from './dexieCloudCredentials'
+export {
+  DEFAULT_CREDENTIALS,
+  DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY,
+  mergeWithDefaultCredentials
+} from './dexieCloudCredentials'
 
 export async function fetchDexieCloudSchema (
   credentials: DexieCloudCredentials
