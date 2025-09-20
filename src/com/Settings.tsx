@@ -278,8 +278,8 @@ export default function Settings () {
     <section className="settings">
       <h2>Dexie Cloud Settings</h2>
       <p className="settings-description">
-        Provide the credentials for your Dexie Cloud instance. The values are stored locally in
-        your browser so they can be reused the next time you open the app.
+        Provide the credentials for your Dexie Cloud instance.
+        The values are stored locally in <b><em>this</em></b> browser.
       </p>
       <form className="settings-form" onSubmit={handleSubmit}>
         <fieldset>
