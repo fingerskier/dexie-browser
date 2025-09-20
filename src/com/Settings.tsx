@@ -1,25 +1,236 @@
-import { useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import useLocalStorage from '../hook/useLocalStorage'
 import { initDb } from '../db'
 import {
   DEFAULT_CREDENTIALS,
   DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY,
-  createDexieCloudOptions
+  createDexieCloudOptions,
+  mergeWithDefaultCredentials
 } from '../lib/dexieCloudApi'
 import type { DexieCloudCredentials } from '../lib/dexieCloudApi'
+import {
+  KNOWN_DATABASES_STORAGE_KEY,
+  SELECTED_KNOWN_DATABASE_ID_STORAGE_KEY,
+  SELECTED_KNOWN_DATABASE_QUERY_KEY,
+  createKnownDatabase,
+  normalizeKnownDatabases,
+  readSelectedKnownDatabaseIdFromQuery,
+  readSelectedKnownDatabaseIdFromUrl,
+  type KnownDatabase
+} from '../lib/knownDatabases'
+import { StateMachineContext } from 'ygdrassil'
+
+const DEFAULT_DATABASE_NAME = 'New database'
+
+function areCredentialsEqual (
+  a: DexieCloudCredentials,
+  b: DexieCloudCredentials
+): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
+function ensureUniqueName (base: string, names: string[]): string {
+  const normalized = new Set(names.map(name => name.trim().toLowerCase()))
+  const trimmedBase = base.trim()
+  const fallback = trimmedBase.length > 0 ? trimmedBase : DEFAULT_DATABASE_NAME
+  if (!normalized.has(fallback.toLowerCase())) {
+    return fallback
+  }
+  let index = 2
+  let candidate = `${fallback} ${index}`.trim()
+  while (normalized.has(candidate.trim().toLowerCase())) {
+    index += 1
+    candidate = `${fallback} ${index}`.trim()
+  }
+  return candidate
+}
+
+function guessDatabaseName (
+  credentials: DexieCloudCredentials,
+  existingNames: string[]
+): string {
+  const url = credentials.databaseUrl?.trim()
+  if (url) {
+    try {
+      const parsed = new URL(url)
+      const base = parsed.hostname || parsed.pathname || url
+      return ensureUniqueName(base, existingNames)
+    } catch {
+      return ensureUniqueName(url, existingNames)
+    }
+  }
+  return ensureUniqueName(DEFAULT_DATABASE_NAME, existingNames)
+}
+
+function getDatabaseLabel (database: KnownDatabase): string {
+  const name = database.name.trim()
+  if (name.length > 0) return name
+  const url = database.credentials.databaseUrl.trim()
+  if (url.length > 0) return url
+  return 'Untitled database'
+}
 
 export default function Settings () {
+  const stateMachine = useContext(StateMachineContext)
+  const machineQuery = stateMachine?.query
   const [credentials, setCredentials] = useLocalStorage<DexieCloudCredentials>(
     DEXIE_CLOUD_CREDENTIAL_STORAGE_KEY,
     { ...DEFAULT_CREDENTIALS }
   )
+  const [knownDatabases, setKnownDatabases] = useLocalStorage<KnownDatabase[]>(
+    KNOWN_DATABASES_STORAGE_KEY,
+    []
+  )
+  const [selectedDatabaseId, setSelectedDatabaseId] = useLocalStorage<string | null>(
+    SELECTED_KNOWN_DATABASE_ID_STORAGE_KEY,
+    null
+  )
   const [status, setStatus] = useState<string | null>(null)
   const [testing, setTesting] = useState(false)
+  const hasKnownDatabases = knownDatabases.length > 0
+  const selectedDatabase = hasKnownDatabases
+    ? (selectedDatabaseId
+      ? knownDatabases.find(database => database.id === selectedDatabaseId) ?? knownDatabases[0]
+      : knownDatabases[0])
+    : null
+  const migrationDoneRef = useRef(false)
+
+  useEffect(() => {
+    if (!hasKnownDatabases) return
+
+    const candidate = stateMachine
+      ? readSelectedKnownDatabaseIdFromQuery(machineQuery)
+      : readSelectedKnownDatabaseIdFromUrl()
+    if (!candidate) return
+
+    if (!knownDatabases.some(database => database.id === candidate)) return
+    if (selectedDatabaseId === candidate) return
+    setSelectedDatabaseId(candidate)
+  }, [
+    hasKnownDatabases,
+    knownDatabases,
+    selectedDatabaseId,
+    setSelectedDatabaseId,
+    machineQuery,
+    stateMachine
+  ])
+
+  useEffect(() => {
+    setKnownDatabases(current => normalizeKnownDatabases(current))
+  }, [setKnownDatabases])
+
+  useEffect(() => {
+    setCredentials(prev => mergeWithDefaultCredentials(prev))
+  }, [setCredentials])
+
+  useEffect(() => {
+    if (migrationDoneRef.current) return
+    if (knownDatabases.length > 0) {
+      migrationDoneRef.current = true
+      return
+    }
+
+    const normalizedCredentials = mergeWithDefaultCredentials(credentials)
+    if (areCredentialsEqual(normalizedCredentials, DEFAULT_CREDENTIALS)) {
+      migrationDoneRef.current = true
+      return
+    }
+
+    const initialDatabase = createKnownDatabase(
+      guessDatabaseName(normalizedCredentials, []),
+      normalizedCredentials
+    )
+    migrationDoneRef.current = true
+    setKnownDatabases([initialDatabase])
+    setSelectedDatabaseId(initialDatabase.id)
+    setCredentials(initialDatabase.credentials)
+  }, [credentials, knownDatabases.length, setKnownDatabases, setSelectedDatabaseId, setCredentials])
+
+  useEffect(() => {
+    if (knownDatabases.length === 0) {
+      if (selectedDatabaseId !== null) {
+        setSelectedDatabaseId(null)
+      }
+      return
+    }
+
+    const selected = selectedDatabaseId
+      ? knownDatabases.find(database => database.id === selectedDatabaseId)
+      : undefined
+    const activeDatabase = selected ?? knownDatabases[0]
+
+    if (!selected || selectedDatabaseId === null) {
+      if (selectedDatabaseId !== activeDatabase.id) {
+        setSelectedDatabaseId(activeDatabase.id)
+      }
+    }
+
+    if (!areCredentialsEqual(credentials, activeDatabase.credentials)) {
+      setCredentials(activeDatabase.credentials)
+    }
+  }, [credentials, knownDatabases, selectedDatabaseId, setCredentials, setSelectedDatabaseId])
+
+  useEffect(() => {
+    if (!stateMachine) return
+    const currentQueryId = readSelectedKnownDatabaseIdFromQuery(machineQuery)
+    const activeId = selectedDatabase?.id ?? null
+    if (currentQueryId === activeId) return
+    stateMachine.setQuery({
+      [SELECTED_KNOWN_DATABASE_QUERY_KEY]: activeId
+    })
+  }, [machineQuery, selectedDatabase?.id, stateMachine])
 
   const updateCredentials = (patch: Partial<DexieCloudCredentials>) => {
-    setCredentials(prev => ({ ...prev, ...patch }))
+    setCredentials(prev => {
+      const updated = { ...prev, ...patch }
+      if (selectedDatabase) {
+        const targetId = selectedDatabase.id
+        setKnownDatabases(current => current.map(database => (
+          database.id === targetId
+            ? { ...database, credentials: updated }
+            : database
+        )))
+      }
+      return updated
+    })
   }
+
+  const handleSelectDatabase = (id: string) => {
+    setSelectedDatabaseId(id || null)
+    setStatus(null)
+  }
+
+  const handleRenameDatabase = (name: string) => {
+    if (!selectedDatabase) return
+    const targetId = selectedDatabase.id
+    setKnownDatabases(current => current.map(database => (
+      database.id === targetId
+        ? { ...database, name }
+        : database
+    )))
+  }
+
+  const handleAddDatabase = () => {
+    setKnownDatabases(current => {
+      const existingNames = current.map(database => database.name)
+      const name = guessDatabaseName(credentials, existingNames)
+      const newDatabase = createKnownDatabase(name, credentials)
+      setSelectedDatabaseId(newDatabase.id)
+      setCredentials(newDatabase.credentials)
+      setStatus(null)
+      return [...current, newDatabase]
+    })
+  }
+
+  const handleDeleteDatabase = () => {
+    if (!selectedDatabase) return
+    const targetId = selectedDatabase.id
+    setKnownDatabases(current => current.filter(database => database.id !== targetId))
+    setStatus(null)
+  }
+
+  const selectedOptionValue = selectedDatabase?.id ?? selectedDatabaseId ?? (hasKnownDatabases ? knownDatabases[0].id : '')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -39,7 +250,16 @@ export default function Settings () {
   }
 
   const handleReset = () => {
-    setCredentials({ ...DEFAULT_CREDENTIALS })
+    const resetCredentials = mergeWithDefaultCredentials({})
+    setCredentials(resetCredentials)
+    if (selectedDatabase) {
+      const targetId = selectedDatabase.id
+      setKnownDatabases(current => current.map(database => (
+        database.id === targetId
+          ? { ...database, credentials: resetCredentials }
+          : database
+      )))
+    }
     setStatus('Credentials cleared. Update the fields and test the connection again.')
   }
 
@@ -62,6 +282,48 @@ export default function Settings () {
         your browser so they can be reused the next time you open the app.
       </p>
       <form className="settings-form" onSubmit={handleSubmit}>
+        <fieldset>
+          <legend>Known databases</legend>
+          {hasKnownDatabases ? (
+            <>
+              <label>
+                <span>Saved databases</span>
+                <select
+                  value={selectedOptionValue}
+                  onChange={event => handleSelectDatabase(event.target.value)}
+                >
+                  {knownDatabases.map(database => (
+                    <option key={database.id} value={database.id}>{getDatabaseLabel(database)}</option>
+                  ))}
+                </select>
+              </label>
+              {selectedDatabase && (
+                <label>
+                  <span>Display name</span>
+                  <input
+                    type="text"
+                    placeholder="Database name"
+                    value={selectedDatabase.name}
+                    onChange={event => handleRenameDatabase(event.target.value)}
+                  />
+                </label>
+              )}
+            </>
+          ) : (
+            <p className="settings-empty">No known databases saved yet. Add one to quickly switch between Dexie Cloud instances.</p>
+          )}
+          <div className="settings-known-actions">
+            <button type="button" onClick={handleAddDatabase}>Add database</button>
+            <button
+              type="button"
+              onClick={handleDeleteDatabase}
+              disabled={!hasKnownDatabases}
+            >
+              Delete selected
+            </button>
+          </div>
+        </fieldset>
+
         <fieldset>
           <legend>Connection</legend>
           <label>
@@ -122,7 +384,7 @@ export default function Settings () {
             />
           </label>
           <label>
-            <span>OAuth client secret</span>
+            <span>Client secret</span>
             <input
               type="password"
               autoComplete="new-password"

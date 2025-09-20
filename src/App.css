@@ -129,6 +129,19 @@
   accent-color: #646cff;
 }
 
+.settings-known-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.settings-empty {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .settings-actions {
   display: flex;
   gap: 0.75rem;
@@ -154,5 +167,9 @@
   .settings-form select {
     border-color: rgba(0, 0, 0, 0.16);
     background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .settings-empty {
+    color: rgba(0, 0, 0, 0.6);
   }
 }
