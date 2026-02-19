@@ -33,8 +33,3 @@ The generated `export.json` file contains a top-level `schema` object mapping
 each table to its primary key specification. Place this file in the `public`
 folder and restart the app. The schema drives the generic data grids for all
 tables except **Users**, **Realms**, and **Roles**.
-
-
-## Cruft
-
-Pragmatically, most of this app is cruft—beyond the basic CRUD functionality, it is mostly optional.
